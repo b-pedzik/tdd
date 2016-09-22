@@ -2,8 +2,14 @@ const request = require('good-guy-http')();
 const fs = require('fs');
 const fileNameArg = process.argv[2];
 
-const readFile = fileName => new Promise((resolve) => {
-  fs.readFile(fileName, 'utf8', (error, data) => resolve(data));
+const readFile = fileName => new Promise((resolve, reject) => {
+  fs.readFile(fileName, 'utf8', (error, data) => {
+    if (error) {
+      reject(error);
+    }
+
+    resolve(data);
+  });
 });
 
 const parseSymbols = symbols => symbols.split('\n');
@@ -35,3 +41,4 @@ readFile(fileNameArg)
 .then(sortValues)
 .then(returnValue)
 .then(data => console.log(data));
+

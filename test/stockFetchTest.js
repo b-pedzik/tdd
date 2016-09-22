@@ -1,8 +1,9 @@
 const stockFetch = require('../lib/stockFetch');
 const assert = require('assert');
+const coMocha = require('co-mocha');
 
-describe('stockFetch e2e', (done) => {
-  it('happy path', () => {
+describe('stockFetch e2e', () => {
+  it('happy path', function* () {
     // given
     let expectedAssertionCount = 0;
 
@@ -27,14 +28,11 @@ describe('stockFetch e2e', (done) => {
     const fetch = stockFetch({ fetchSymbols, fetchPrices, prepareReport });
 
     // when
-    const reportPromise = fetch('someFile');
+    const report = yield fetch('someFile');
 
     // then
-    reportPromise.then(report => {
-      assert.equal(report, 'report');
-      expectedAssertionCount++;
-      assert.equal(expectedAssertionCount, 3, 'expected number of assertions');
-      done();
-    }).catch(done);
+    assert.equal(report, 'report');
+    expectedAssertionCount++;
+    assert.equal(expectedAssertionCount, 4, 'expected number of assertions');
   });
 });
