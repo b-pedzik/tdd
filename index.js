@@ -2,13 +2,19 @@ const request = require('good-guy-http')();
 const fs = require('fs');
 const fileNameArg = process.argv[2];
 
-const fetchValues = name => request('http://ichart.finance.yahoo.com/table.csv?s=' + name)
-  .then(req => Promise.resolve({ name, data: req.body }))
-  .catch(() => Promise.resolve({ name, data: 'Error' }));
+const readFile = fileName => new Promise((resolve) => {
+  fs.readFile(fileName, 'utf8', (error, data) => resolve(data));
+});
 
-const sortValues = (val1, val2) => +val1.value < +val2.value;
+const parseSymbols = symbols => symbols.split('\n');
 
-const displayItem = item => console.log(`${item.name} ${item.data}`);
+const fetchValues = symbols => Promise.all(
+  symbols.map(
+    name => request('http://ichart.finance.yahoo.com/table.csv?s=' + name)
+      .then(req => Promise.resolve({ name, data: req.body }))
+      .catch(() => Promise.resolve({ name, data: 'Error' }))
+  )
+);
 
 const readResponseValue = data => data.map((item) => {
   if (item.data !== 'Error') {
@@ -16,19 +22,16 @@ const readResponseValue = data => data.map((item) => {
   }
 
   return item;
-})
-.sort(sortValues)
-.forEach(displayItem);
-
-const fetch = fileName => {
-  fs.readFile(fileName, 'utf8', (error, data) => {
-    const arr = data.split('\n');
-    const promises = arr.map(fetchValues);
-
-    Promise.all(promises).then(readResponseValue).catch(err => console.log(err));
-  });
-};
-
-fetch(fileNameArg).then((data) => {
-  console.log(data);
 });
+
+const sortValues = values => values.sort((val1, val2) => +val1.value < +val2.value);
+
+const returnValue = data => data.map(item => `${item.name} ${item.data}`).join('\n');
+
+readFile(fileNameArg)
+.then(parseSymbols)
+.then(fetchValues)
+.then(readResponseValue)
+.then(sortValues)
+.then(returnValue)
+.then(data => console.log(data));

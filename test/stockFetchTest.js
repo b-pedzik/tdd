@@ -24,7 +24,7 @@ describe('stockFetch e2e', (done) => {
       return 'report';
     };
 
-    const fetch = stockFetch(fetchSymbols, fetchPrices, prepareReport);
+    const fetch = stockFetch({ fetchSymbols, fetchPrices, prepareReport });
 
     // when
     const reportPromise = fetch('someFile');
