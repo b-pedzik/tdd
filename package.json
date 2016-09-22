@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "data.either": "1.4.0",
     "good-guy-http": "1.7.3"
   },
   "devDependencies": {

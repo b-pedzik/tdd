@@ -2,34 +2,26 @@ const request = require('good-guy-http')();
 const fs = require('fs');
 const fileNameArg = process.argv[2];
 
+const symbolsFetch = require('./lib/file/symbolsFetch');
 const readFile = require('./lib/file/readFile')({ fs });
 const parseSymbols = require('./lib/file/parseSymbols')();
 
-const fetchValues = symbols => Promise.all(
-  symbols.map(
-    name => request('http://ichart.finance.yahoo.com/table.csv?s=' + name)
-      .then(req => Promise.resolve({ name, data: req.body }))
-      .catch(() => Promise.resolve({ name, data: 'Error' }))
-  )
-);
+const fetchSymbols = symbolsFetch({ readFile, parseSymbols });
 
-const readResponseValue = data => data.map((item) => {
-  if (item.data !== 'Error') {
-    item.data = item.data.split('\n')[1].split(',')[1];
-  }
+const pricesFetch = require('./lib/http/pricesFetch');
+const readAllPrices = require('./lib/http/readAllPrices')({ request });
+const parseCurrentPrices = require('./lib/http/parseCurrentPrices')();
 
-  return item;
-});
+const fetchPrices = pricesFetch({ readAllPrices, parseCurrentPrices });
 
-const sortValues = values => values.sort((val1, val2) => +val1.value < +val2.value);
+const prepareReport = require('./lib/report/prepareReport');
+const partitionResult = require('./lib/report/partitionResults');
+const prepareErrorReport = require('./lib/report/prepareErrorReport');
+const prepareSuccessReport = require('./lib/report/prepareSuccessReport');
 
-const returnValue = data => data.map(item => `${item.name} ${item.data}`).join('\n');
+const pr = prepareReport({ partitionResult, prepareSuccessReport, prepareErrorReport });
 
-readFile(fileNameArg)
-.then(parseSymbols)
-.then(fetchValues)
-.then(readResponseValue)
-.then(sortValues)
-.then(returnValue)
+const stockFetch = require('./lib/stockFetch');
+
+stockFetch({ fetchSymbols, fetchPrices, prepareReport: pr })(fileNameArg)
 .then(data => console.log(data));
-
