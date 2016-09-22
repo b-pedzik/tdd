@@ -2,17 +2,8 @@ const request = require('good-guy-http')();
 const fs = require('fs');
 const fileNameArg = process.argv[2];
 
-const readFile = fileName => new Promise((resolve, reject) => {
-  fs.readFile(fileName, 'utf8', (error, data) => {
-    if (error) {
-      reject(error);
-    }
-
-    resolve(data);
-  });
-});
-
-const parseSymbols = symbols => symbols.split('\n');
+const readFile = require('./lib/file/readFile')({ fs });
+const parseSymbols = require('./lib/file/parseSymbols')();
 
 const fetchValues = symbols => Promise.all(
   symbols.map(
